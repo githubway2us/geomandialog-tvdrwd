@@ -1,0 +1,5 @@
+*.json
+*.log
+serviceAccountKey.json
+geomandialog-tvdrwd-native-firebase-adminsdk-fbsvc-3d2d22b607.json
+firebase-debug.log
