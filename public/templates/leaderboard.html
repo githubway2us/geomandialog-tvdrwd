@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+    <h1 class="text-center">🏆 Leaderboard</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>อันดับ</th>
+                <th>ผู้ใช้</th>
+                <th>จำนวน PUK ที่ส่ง</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for username, total_sent in top_senders %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ username }}</td>
+                    <td>{{ total_sent|floatformat }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

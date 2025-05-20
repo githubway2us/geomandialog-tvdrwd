@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}เพิ่มแผนการท่องเที่ยว{% endblock %}
+{% block content %}
+    <h1 class="text-center">🗺️ เพิ่มแผนการท่องเที่ยว</h1>
+    <form method="POST" enctype="multipart/form-data" class="bg-light p-4 rounded shadow-sm" style="background-color: rgba(21, 148, 110, 0.8);">
+        <div class="mb-3">
+            <label for="province_id" class="form-label">จังหวัด</label>
+            <select class="form-select" id="province_id" name="province_id" required>
+                {% for province in provinces %}
+                    <option value="{{ province.id }}" {% if selected_province_id and province.id == selected_province_id %}selected{% endif %}>
+                        {{ province.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">ชื่อทริป</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="location" class="form-label">สถานที่</label>
+            <input type="text" class="form-control" id="location" name="location">
+        </div>
+        <div class="mb-3">
+            <label for="start_date" class="form-label">วันที่เริ่ม</label>
+            <input type="date" class="form-control" id="start_date" name="start_date" required>
+        </div>
+        <div class="mb-3">
+            <label for="end_date" class="form-label">วันที่สิ้นสุด</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" required>
+        </div>
+        
+        <h3>เพิ่มกิจกรรม</h3>
+        <div id="activities">
+            <div class="activity row mb-3">
+                <div class="col-md-2">
+                    <label for="time" class="form-label">เวลา</label>
+                    <input type="time" class="form-control" name="activities[0][time]" step="60">
+                </div>
+                <div class="col-md-4">
+                    <label for="detail" class="form-label">รายละเอียด</label>
+                    <input type="text" class="form-control" name="activities[0][detail]">
+                </div>
+                <div class="col-md-2">
+                    <label for="budget" class="form-label">งบ (บาท)</label>
+                    <input type="number" class="form-control" name="activities[0][budget]" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label for="image" class="form-label">รูปภาพ</label>
+                    <input type="file" class="form-control" name="activities[0][image]" accept="image/*">
+                </div>
+            </div>
+        </div>
+        <p id="total-budget" class="text-success fw-bold">ผลรวมงบประมาณ: 0.00 บาท</p>
+        <div id="error-message" class="text-danger mb-3" style="display: none;"></div>
+        <button type="button" class="btn btn-secondary mb-3" onclick="addActivity()">เพิ่มกิจกรรม</button>
+        <button type="submit" class="btn btn-primary">บันทึกแผน</button>
+    </form>
+    
+    <script>
+        let activityCount = 1;
+        const maxActivities = 50;
+
+        function formatNumber(number) {
+            let parts = number.toFixed(2).split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return parts.join('.');
+        }
+
+        function addActivity() {
+            if (activityCount >= maxActivities) {
+                document.getElementById('error-message').textContent = `ไม่สามารถเพิ่มกิจกรรมได้เกิน ${maxActivities} รายการ`;
+                document.getElementById('error-message').style.display = 'block';
+                return;
+            }
+            const activities = document.getElementById("activities");
+            const newActivity = document.createElement("div");
+            newActivity.classList.add("activity", "row", "mb-3");
+            newActivity.innerHTML = `
+                <div class="col-md-2">
+                    <label class="form-label">เวลา</label>
+                    <input type="time" class="form-control" name="activities[${activityCount}][time]" step="60">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">รายละเอียด</label>
+                    <input type="text" class="form-control" name="activities[${activityCount}][detail]">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">งบ (บาท)</label>
+                    <input type="number" class="form-control" name="activities[${activityCount}][budget]" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">รูปภาพ</label>
+                    <input type="file" class="form-control" name="activities[${activityCount}][image]" accept="image/*">
+                </div>
+            `;
+            activities.appendChild(newActivity);
+            const newBudgetInput = newActivity.querySelector('input[name$="[budget]"]');
+            newBudgetInput.addEventListener('input', updateTotalBudget);
+            console.log(`Added activity with index ${activityCount}`);
+            activityCount++;
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function updateTotalBudget() {
+            let total = 0;
+            document.querySelectorAll('input[name$="[budget]"]').forEach(input => {
+                let value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            document.getElementById('total-budget').textContent = `ผลรวมงบประมาณ: ${formatNumber(total)} บาท`;
+        }
+
+        document.querySelectorAll('input[name$="[budget]"]').forEach(input => {
+            input.addEventListener('input', updateTotalBudget);
+        });
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const activities = document.querySelectorAll('.activity');
+            if (activities.length < 1) {
+                document.getElementById('error-message').textContent = 'กรุณาเพิ่มอย่างน้อยหนึ่งกิจกรรม';
+                document.getElementById('error-message').style.display = 'block';
+                e.preventDefault();
+                return;
+            }
+            let valid = false;
+            activities.forEach((activity, index) => {
+                const time = activity.querySelector(`input[name="activities[${index}][time]"]`).value;
+                const detail = activity.querySelector(`input[name="activities[${index}][detail]"]`).value;
+                const budget = activity.querySelector(`input[name="activities[${index}][budget]"]`).value;
+                const image = activity.querySelector(`input[name="activities[${index}][image]"]`).files.length;
+                if (time || detail || budget || image) {
+                    valid = true;
+                    console.log(`Activity ${index}: time=${time}, detail=${detail}, budget=${budget}, image=${image > 0 ? 'yes' : 'no'}`);
+                } else {
+                    document.getElementById('error-message').textContent = `กรุณากรอกอย่างน้อยหนึ่งฟิลด์ (เวลา, รายละเอียด, งบ, หรือรูปภาพ) สำหรับกิจกรรมที่ ${index + 1}`;
+                    document.getElementById('error-message').style.display = 'block';
+                    e.preventDefault();
+                }
+            });
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+
+        updateTotalBudget();
+    </script>
+{% endblock %}

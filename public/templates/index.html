@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}หน้าแรก{% endblock %}
+{% block content %}
+<div class="p-4 rounded-4" style="background-color: rgba(3, 49, 42, 0.85); backdrop-filter: blur(5px);">
+    <h1 class="text-center">🗺️ เลือกจังหวัดเพื่อดูแผนการท่องเที่ยว</h1></div>
+    <div class="accordion" id="regionsAccordion">
+        {% for region, provinces in region_provinces.items() %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-{{ loop.index }}">
+                    <button class="accordion-button {% if loop.index != 1 %}collapsed{% endif %}" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapse-{{ loop.index }}" 
+                            aria-expanded="{% if loop.index == 1 %}true{% else %}false{% endif %}" 
+                            aria-controls="collapse-{{ loop.index }}">
+                        {{ region }}
+                    </button>
+                </h2>
+                <div id="collapse-{{ loop.index }}" 
+                     class="accordion-collapse collapse {% if loop.index == 1 %}show{% endif %}" 
+                     aria-labelledby="heading-{{ loop.index }}" 
+                     data-bs-parent="#regionsAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            {% for province in provinces %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ province.name }}</h5>
+                                            <p>จำนวนโพสต์: {{ province.post_count }}</p> <!-- แสดงจำนวนโพสต์ -->
+                                            <a href="{{ url_for('province', province_id=province.id) }}" 
+                                               class="btn btn-primary">ดูโพสต์</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

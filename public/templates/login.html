@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}ล็อกอิน{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">🔐 ล็อกอิน</h1>
+        <div class="card mx-auto shadow-sm" style="max-width: 500px; background: rgba(0, 0, 0, 0.5); border: none;">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label text-white">ชื่อผู้ใช้</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label text-white">รหัสผ่าน</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">ล็อกอิน</button>
+                    <p class="mt-3 text-center text-white">
+                        ยังไม่มีบัญชี? <a href="{{ url_for('register') }}" class="text-info">สมัครสมาชิก</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

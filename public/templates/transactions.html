@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}ประวัติธุรกรรม{% endblock %}
+{% block content %}
+    <h1 class="text-center">📜 ประวัติธุรกรรม PUK</h1>
+    {% if transactions %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ลำดับ</th>
+                    <th>วันที่/เวลา</th>
+                    <th>ผู้ส่ง</th>
+                    <th>ผู้รับ</th>
+                    <th>จำนวน PUK</th>
+                    <th>แผนการท่องเที่ยว</th>
+                    <th>Transaction Hash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ transaction.sender.username }}</td>
+                        <td>{{ transaction.receiver.username }}</td>
+                        <td>{{ transaction.amount }}</td>
+                        <td>
+                            <a href="{{ url_for('province', province_id=transaction.travel_plan.province_id) if transaction.travel_plan else '#' }}#plan-{{ transaction.travel_plan.id if transaction.travel_plan else '' }}">
+
+                                {{ transaction.travel_plan.name }}
+                            </a>
+                        </td>
+                        <td>{{ transaction.tx_hash or 'N/A' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-center">ไม่มีธุรกรรมในขณะนี้</p>
+    {% endif %}
+{% endblock %}

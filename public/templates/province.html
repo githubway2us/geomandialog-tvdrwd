@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}🌏 {{ province.name }}{% endblock %}
+{% block content %}
+<div class="card mb-4 shadow-sm" style="background: rgba(240, 238, 238, 0.6);">
+        <h1 class="text-center mb-4">📍 แผนการท่องเที่ยวใน {{ province.name }} 🏞️</h1>
+        <p class="text-center text-info">จำนวนโพสต์ทั้งหมด: {{ plan_count }} โพสต์</p>
+
+        <!-- Filter and Sort Controls -->
+        <div class="card mb-4 shadow-sm" style="background: rgba(240, 238, 238, 0.6);">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="budget" class="form-label">💸 กรองตามงบประมาณ</label>
+                        <select name="budget" id="budget" class="form-select">
+                            <option value="">ทั้งหมด</option>
+                            <option value="0-5000" {% if request.args.get('budget') == '0-5000' %}selected{% endif %}>0 - 5,000 บาท</option>
+                            <option value="5001-10000" {% if request.args.get('budget') == '5001-10000' %}selected{% endif %}>5,001 - 10,000 บาท</option>
+                            <option value="10001+" {% if request.args.get('budget') == '10001+' %}selected{% endif %}>มากกว่า 10,000 บาท</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="sort" class="form-label">📅 เรียงลำดับ</label>
+                        <select name="sort" id="sort" class="form-select">
+                            <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>ใหม่ล่าสุด</option>
+                            <option value="oldest" {% if request.args.get('sort') == 'oldest' %}selected{% endif %}>เก่าที่สุด</option>
+                            <option value="budget_high" {% if request.args.get('sort') == 'budget_high' %}selected{% endif %}>งบประมาณสูงสุด</option>
+                            <option value="budget_low" {% if request.args.get('sort') == 'budget_low' %}selected{% endif %}>งบประมาณต่ำสุด</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">🔍 กรอง</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mb-4 text-center">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">🔙 กลับไปหน้าแรก</a>
+            {% if session.user_id %}
+                <a href="{{ url_for('post', province_id=province.id) }}" class="btn btn-success">✨ สร้างแผนใหม่</a>
+            {% else %}
+                <p class="text-muted mt-2">🔒 กรุณาล็อกอินเพื่อสร้างหรือเพิ่มแผนการท่องเที่ยว</p>
+            {% endif %}
+        </div>
+
+        <!-- Plans List -->
+        {% if plans %}
+            {% for plan in plans.items %}
+                <div class="card mb-4 shadow-sm" style="background: rgba(255, 255, 255, 0.6); border-radius: 10px;">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">🎉 {{ plan.name }}</h5>
+                            <small>👤 โดย {{ plan.user.username }} | 📅 {{ plan.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <a href="{{ url_for('plan_detail', plan_id=plan.id) }}" class="btn btn-sm btn-info">🔍 ดูรายละเอียด</a>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>🏕️ สถานที่:</strong> {{ plan.location or 'ไม่ระบุ' }}</p>
+                        <p><strong>🗓️ วันที่:</strong> {{ plan.start_date }} ถึง {{ plan.end_date }}</p>
+                        <p><strong>💸 งบประมาณรวม:</strong> {{ plan.total_budget|format_number }} บาท</p>
+
+                        <h6>📋 กิจกรรม ({{ plan.activities|length }} รายการ):</h6>
+                        {% if plan.activities %}
+                            <div class="collapse show" id="activities-{{ plan.id }}">
+                                <ul class="list-group mb-3" style="max-height: 150px; overflow-y: auto;">
+                                    {% for activity in plan.activities[:3] %} <!-- จำกัดแสดง 3 กิจกรรม -->
+                                        <li class="list-group-item d-flex align-items-start bg-dark text-white">
+                                            <div>
+                                                {% if activity.time %}
+                                                    ⏰ <strong>{{ activity.time }}</strong>
+                                                {% else %}
+                                                    ⏰ <span class="text-muted">ไม่ระบุเวลา</span>
+                                                {% endif %}
+                                                {% if activity.detail %}
+                                                    : {{ activity.detail|truncate(50) }} <!-- ตัดข้อความยาว -->
+                                                {% else %}
+                                                    : <span class="text-muted">ไม่มีรายละเอียด</span>
+                                                {% endif %}
+                                                {% if activity.budget %}
+                                                    <span class="badge bg-success ms-2">💵 {{ activity.budget|format_number }} บาท</span>
+                                                {% endif %}
+                                                {% if activity.image_path %}
+                                                    <br><img src="{{ url_for('static', filename='uploads/' + activity.image_path) }}" alt="Activity Image" class="img-fluid mt-2" style="max-width: 100px; border-radius: 5px;" loading="lazy">
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% if plan.activities|length > 3 %}
+                                    <button class="btn btn-outline-info btn-sm" data-bs-toggle="collapse" data-bs-target="#activities-{{ plan.id }}">📋 ดูกิจกรรมทั้งหมด ({{ plan.activities|length - 3 }} รายการ)</button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">😔 ยังไม่มีกิจกรรมในแผนนี้</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            <nav aria-label="Plan pagination">
+                <ul class="pagination justify-content-center">
+                    {% if plans.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('province', province_id=province.id, page=plans.prev_num, budget=request.args.get('budget'), sort=request.args.get('sort')) }}">ก่อนหน้า</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">ก่อนหน้า</span>
+                        </li>
+                    {% endif %}
+
+                    {% for page_num in plans.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if plans.page == page_num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('province', province_id=province.id, page=page_num, budget=request.args.get('budget'), sort=request.args.get('sort')) }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if plans.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('province', province_id=province.id, page=plans.next_num, budget=request.args.get('budget'), sort=request.args.get('sort')) }}">ถัดไป</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">ถัดไป</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% else %}
+            <div class="alert alert-info text-center">
+                😢 ยังไม่มีแผนการท่องเที่ยวใน {{ province.name }} ค่ะ <br>
+                {% if session.user_id %}
+                    <a href="{{ url_for('post', province_id=province.id) }}" class="btn btn-success mt-2">✨ มาเป็นคนแรกที่สร้างแผน!</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary mt-2">🔑 ล็อกอินเพื่อสร้างแผน</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
